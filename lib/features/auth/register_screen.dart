@@ -19,7 +19,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _handleRegister() async {
     setState(() => _isLoading = true);
     try {
-      await _authService.signUp(
+      await (_authService as dynamic).register(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         fullName: _nameController.text.trim(),

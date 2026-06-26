@@ -26,15 +26,20 @@ class _TechnicianTaskScreenState extends State<TechnicianTaskScreen> {
         .from('maintenance_logs')
         .select('*, assets(name)')
         .eq('status', 'diproses')
+        .eq('technician_id', Supabase.instance.client.auth.currentUser!.id)
         .order('created_at', ascending: true);
   }
 
   // Fungsi untuk memperbarui progres tugas dari 'diproses' ke 'selesai'
-  Future<void> _updateProgressToFinished(String reportId) async {
+  // PERUBAHAN: Menerima parameter repairNotes dari Dialog Kontrol
+  Future<void> _updateProgressToFinished(String reportId, String repairNotes) async {
     try {
       await _supabase
           .from('maintenance_logs')
-          .update({'status': 'selesai'})
+          .update({
+            'status': 'selesai',
+            'repair_notes': repairNotes, // Sekarang variabel ini sudah terisi secara dinamis
+          })
           .eq('id', reportId);
       
       // --- PERUBAHAN: Segarkan data future terlebih dahulu baru panggil setState ---
@@ -57,6 +62,50 @@ class _TechnicianTaskScreenState extends State<TechnicianTaskScreen> {
         );
       }
     }
+  }
+
+  // TAMBAHAN FITUR: Modal Pop-up untuk input catatan perbaikan sebelum tugas ditutup
+  void _showRepairNotesDialog(String reportId) {
+    final notesController = TextEditingController();
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Mengharuskan teknisi memilih opsi di dalam dialog
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Penyelesaian'),
+        content: TextField(
+          controller: notesController,
+          decoration: const InputDecoration(
+            labelText: 'Catatan Perbaikan / Tindakan',
+            hintText: 'Contoh: Berhasil mengganti sekring RAM & membersihkan debu...',
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              if (notesController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Catatan perbaikan wajib diisi!')),
+                );
+                return;
+              }
+              Navigator.pop(context); // Tutup Dialog
+              _updateProgressToFinished(reportId, notesController.text.trim());
+            },
+            child: const Text('Simpan & Selesai'),
+          ),
+        ],
+      ),
+    );
   }
 
   // Fungsi preview foto kerusakan ukuran penuh dengan fitur cubit/zoom (InteractiveViewer)
@@ -219,7 +268,8 @@ class _TechnicianTaskScreenState extends State<TechnicianTaskScreen> {
                           ),
                           const SizedBox(width: 8), // Memberikan jarak aman sebelum tombol
                           ElevatedButton.icon(
-                            onPressed: () => _updateProgressToFinished(task['id']),
+                            // PERUBAHAN: Menghubungkan tombol ke Dialog Kontrol baru
+                            onPressed: () => _showRepairNotesDialog(task['id']),
                             icon: const Icon(Icons.check, size: 16),
                             label: const Text('Selesai'),
                             style: ElevatedButton.styleFrom(
