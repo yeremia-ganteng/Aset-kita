@@ -58,10 +58,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true, // --- TAMBAHAN: Mencegah overflow saat keyboard muncul ---
       backgroundColor: Colors.grey.shade50, // --- TAMBAHAN: Background halus ---
       body: Center(
         child: SingleChildScrollView( // --- TAMBAHAN: Mencegah error layout pecah saat keyboard muncul ---
-          padding: const EdgeInsets.all(28.0),
+          padding: const EdgeInsets.only(left: 28, right: 28, bottom: 50),
           child: Form(
             key: _formKey, // --- TAMBAHAN: Pasang Form Key ---
             child: Column(
@@ -129,15 +130,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Tombol Masuk dengan State Loading
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : ElevatedButton(
-                        onPressed: _handleLogin,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          elevation: 1,
-                        ),
-                        child: const Text('Masuk', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
+// Ganti bagian ternary (if else) tombol Anda dengan ini:
+:ElevatedButton(
+  // Jika sedang loading, set onPressed ke null (tombol otomatis tidak bisa diklik)
+  onPressed: _isLoading ? null : _handleLogin, 
+  style: ElevatedButton.styleFrom(
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    elevation: 1,
+  ),
+  child: _isLoading 
+      ? const SizedBox(
+          height: 20, 
+          width: 20, 
+          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+        )
+      : const Text('Masuk', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+),
                 const SizedBox(height: 12),
                 
                 TextButton(
