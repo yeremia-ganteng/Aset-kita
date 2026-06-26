@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'technician_task_screen.dart'; // Pastikan mengarah ke file task screen
+import 'technician_history_screen.dart'; // <--- Tambahan import untuk halaman riwayat
 
 class TechnicianDashboard extends StatefulWidget {
   const TechnicianDashboard({super.key});
@@ -106,38 +107,49 @@ class _TechnicianDashboardState extends State<TechnicianDashboard> {
             
             const SizedBox(height: 16),
 
-            // Card Menu Tambahan: Riwayat Selesai (Opsional)
+            // Card Menu Tambahan: Riwayat Selesai (SEKARANG SUDAH AKTIF & BISA DIKLIK)
             Card(
-              elevation: 2,
-              color: Colors.grey.shade50,
+              elevation: 4, // Ditingkatkan ke 4 agar serasi dengan card di atas
+              color: Colors.white, // Diubah ke putih bersih agar efek InkWell terlihat jelas
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.green.withOpacity(0.1),
-                      child: const Icon(Icons.check_circle_outline, size: 36, color: Colors.green),
-                    ),
-                    const SizedBox(width: 16),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Riwayat Tugas Selesai',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black54),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Semua perbaikan yang telah rampung',
-                            style: TextStyle(color: Colors.grey, fontSize: 13),
-                          ),
-                        ],
+              child: InkWell(
+                onTap: () {
+                  // Navigasi menuju halaman Riwayat Tugas Selesai
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const TechnicianHistoryScreen()),
+                  );
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.green.withOpacity(0.1),
+                        child: const Icon(Icons.check_circle_outline, size: 36, color: Colors.green),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Riwayat Tugas Selesai',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Semua perbaikan yang telah rampung',
+                              style: TextStyle(color: Colors.grey, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey), // Menambahkan panah indikator rute
+                    ],
+                  ),
                 ),
               ),
             ),
