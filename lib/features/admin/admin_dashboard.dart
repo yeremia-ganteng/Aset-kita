@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'report_list_screen.dart'; // Halaman untuk melihat daftar laporan masuk
+// --- TAMBAHAN IMPORT UNTUK HALAMAN BARU ---
+import 'asset_management_screen.dart';
+import 'technician_list_screen.dart';
+import 'activity_log_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -24,6 +28,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       appBar: AppBar(
         title: const Text('Dashboard Admin'),
         backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white, // Menjaga kontras teks putih pada AppBar
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -61,7 +66,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     icon: Icons.assignment_late,
                     color: Colors.orange,
                     onTap: () {
-                      // halaman list laporan masuk
+                      // Halaman list laporan masuk (Sudah Terhubung)
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const ReportListScreen()),
@@ -74,7 +79,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     icon: Icons.inventory,
                     color: Colors.blue,
                     onTap: () {
-                      // Nanti kita buat halaman kelola data aset (CRUD)
+                      // --- DIKONEKSIKAN ---
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AssetManagementScreen()),
+                      );
                     },
                   ),
                   _buildMenuCard(
@@ -83,7 +92,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     icon: Icons.engineering,
                     color: Colors.green,
                     onTap: () {
-                      // Nanti kita buat halaman monitoring teknisi
+                      // --- DIKONEKSIKAN ---
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const TechnicianListScreen()),
+                      );
                     },
                   ),
                   _buildMenuCard(
@@ -92,7 +105,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     icon: Icons.history,
                     color: Colors.purple,
                     onTap: () {
-                      // Nanti kita buat halaman riwayat sistem keseluruhan
+                      // --- DIKONEKSIKAN ---
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ActivityLogScreen()),
+                      );
                     },
                   ),
                 ],
