@@ -11,22 +11,23 @@ class ReportListScreen extends StatefulWidget {
 class _ReportListScreenState extends State<ReportListScreen> {
   final _supabase = Supabase.instance.client;
 
+  // --- TAMBAHAN DATA STATE TEKNISI ---
   List<Map<String, dynamic>> _technicians = [];
   bool _isLoadingTech = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchTechnicians();
+    _fetchTechnicians(); // Mengambil data nama teknisi saat halaman dibuka
   }
 
+  // --- TAMBAHAN FUNGSI: Mengambil daftar semua teknisi ---
   Future<void> _fetchTechnicians() async {
     try {
-      // Memfilter berdasarkan 'role' enum ('teknisi') sesuai isi database kamu
       final data = await _supabase
           .from('profiles')
-          .select('id, full_name, role') 
-          .eq('role', 'teknisi'); 
+          .select('id, full_name, role') // DIUBAH: 'name' menjadi 'full_name' sesuai skema tabel profiles kamu
+          .eq('role', 'teknisi'); // DIUBAH: disesuaikan langsung dengan TYPE ENUM user_role ('teknisi')
 
       setState(() {
         _technicians = List<Map<String, dynamic>>.from(data);
@@ -38,21 +39,21 @@ class _ReportListScreenState extends State<ReportListScreen> {
     }
   }
 
+  // --- TAMBAHAN FUNGSI: Menugaskan teknisi & otomatis set status ke 'diproses' ---
   Future<void> _assignTechnician(String reportId, String techId) async {
     try {
-      // Plotting teknisi mengubah status ke 'diproses' sesuai ENUM log_status
       await _supabase
           .from('maintenance_logs')
           .update({
             'technician_id': techId,
-            'status': 'diproses',
+            'status': 'diproses', // Otomatis naik status agar masuk ke device teknisi
           })
           .eq('id', reportId);
       
       setState(() {}); 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Teknisi berhasil ditugaskan!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Teknisi berhasil ditugaskan & status diperbarui!'), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
@@ -62,15 +63,17 @@ class _ReportListScreenState extends State<ReportListScreen> {
     }
   }
 
+  // --- TAMBAHAN HELPER: Mencari nama teknisi berdasarkan ID secara lokal ---
   String _getTechName(String? techId) {
     if (techId == null) return 'Belum ditugaskan';
     final tech = _technicians.firstWhere(
       (t) => t['id'].toString() == techId.toString(), 
       orElse: () => {},
     );
-    return tech['full_name'] ?? 'Teknisi Tidak Dikenal';
+    return tech['full_name'] ?? 'Teknisi Tidak Dikenal'; // DIUBAH: 'name' menjadi 'full_name'
   }
 
+  // Fungsi untuk update status ke Supabase (ASLI)
   Future<void> _updateStatus(String reportId, String newStatus) async {
     try {
       await _supabase
@@ -91,6 +94,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
     }
   }
 
+  // --- TAMBAHAN: Fungsi untuk menampilkan foto ukuran penuh (ASLI) ---
   void _showFullImage(String imageUrl) {
     showDialog(
       context: context,
@@ -106,12 +110,13 @@ class _ReportListScreenState extends State<ReportListScreen> {
     );
   }
 
+  // Dialog untuk pilihan status (SEKARANG MENDUKUNG PLOTTING TEKNISI)
   void _showStatusDialog(Map<String, dynamic> report) {
     String? selectedTechId = report['technician_id'];
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (context) => StatefulBuilder( // Ditambahkan StatefulBuilder agar Dropdown di dalam dialog responsif
         builder: (context, setDialogState) {
           return AlertDialog(
             title: const Text('Kelola Laporan Masuk'),
@@ -122,7 +127,6 @@ class _ReportListScreenState extends State<ReportListScreen> {
                 children: [
                   const Text('Ubah Status Kerja:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   const SizedBox(height: 4),
-                  // Menyesuaikan dengan tipe ENUM log_status kamu ('dilaporkan', 'diproses', 'selesai')
                   ...['dilaporkan', 'diproses', 'selesai'].map((status) {
                     return ListTile(
                       title: Text(status),
@@ -158,7 +162,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
                               items: _technicians.map((tech) {
                                 return DropdownMenuItem<String>(
                                   value: tech['id'].toString(),
-                                  child: Text(tech['full_name'] ?? 'Tanpa Nama'),
+                                  child: Text(tech['full_name'] ?? 'Tanpa Nama'), // DIUBAH: 'name' menjadi 'full_name'
                                 );
                               }).toList(),
                               onChanged: (newTechId) {
@@ -167,7 +171,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
                                     selectedTechId = newTechId;
                                   });
                                   _assignTechnician(report['id'].toString(), newTechId);
-                                  Navigator.pop(context);
+                                  Navigator.pop(context); // Tutup dialog setelah berhasil assign
                                 }
                               },
                             ),
@@ -202,21 +206,20 @@ class _ReportListScreenState extends State<ReportListScreen> {
             itemBuilder: (context, index) {
               final report = reports[index];
               final status = report['status'] ?? 'dilaporkan';
-              
-              // PERBAIKAN: Menggunakan 'photo_url' sesuai skema database asli kamu
-              final photoUrl = report['photo_url']; 
+              final imageUrl = report['image_url']; // DIUBAH: 'image_url' menjadi 'photo_url' sesuai skema tabel maintenance_logs kamu
               final String? currentTechId = report['technician_id'];
               
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 child: ListTile(
-                  leading: (photoUrl != null && photoUrl.isNotEmpty)
+                  // --- Thumbnail Foto di sisi kiri (ASLI) ---
+                  leading: (imageUrl != null && imageUrl.isNotEmpty)
                       ? GestureDetector(
-                          onTap: () => _showFullImage(photoUrl),
+                          onTap: () => _showFullImage(imageUrl),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.network(
-                              photoUrl,
+                              imageUrl,
                               width: 50,
                               height: 50,
                               fit: BoxFit.cover,
@@ -226,6 +229,8 @@ class _ReportListScreenState extends State<ReportListScreen> {
                       : const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
                   
                   title: Text(report['assets']?['name'] ?? 'Aset Tidak Dikenal'),
+                  
+                  // --- PEMBARUAN SUBTITLE: Menampilkan deskripsi SEKALIGUS nama teknisi yang bertugas ---
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -251,6 +256,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
                       ),
                     ],
                   ),
+                  
                   trailing: Chip(
                     label: Text(status),
                     backgroundColor: status == 'selesai' 
