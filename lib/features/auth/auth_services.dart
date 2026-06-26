@@ -4,32 +4,71 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AuthService {
   final _supabase = Supabase.instance.client;
 
+  // 1. Fungsi Login
+  Future<User?> signIn({required String email, required String password}) async {
+    try {
+      final response = await _supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      
+      if (response.user == null) {
+        throw Exception('Email atau password salah.');
+      }
+      return response.user;
+    } catch (e) {
+      throw Exception('Gagal login: ${e.toString()}');
+    }
+  }
+
+  // 2. Fungsi Register
+  Future<void> register({
+    required String email,
+    required String password,
+    required String fullName,
+    required String role,
+  }) async {
+    try {
+      final response = await _supabase.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'full_name': fullName, // Menyimpan nama ke metadata auth
+          'role': role,          // Menyimpan role ke metadata auth
+        },
+      );
+
+      if (response.user == null) {
+        throw Exception('Gagal mendaftar. Silakan coba lagi.');
+      }
+    } catch (e) {
+      throw Exception('Gagal registrasi: ${e.toString()}');
+    }
+  }
+
+  // 3. Fungsi Get User Role
   Future<String> getUserRole(String userId) async {
     try {
-      // Mengambil data baris tunggal secara langsung
       final Map<String, dynamic> response = await _supabase
           .from('profiles')
           .select('role')
           .eq('id', userId)
           .single();
 
-      // Memastikan field 'role' tidak null
       if (response['role'] == null) {
         throw Exception('Role tidak ditemukan pada profil ini.');
       }
 
       return response['role'] as String;
     } catch (e) {
-      // Menangkap error jika user id tidak ditemukan di tabel profiles atau masalah jaringan
       throw Exception('Gagal mengambil role user: ${e.toString()}');
     }
   }
 
+  // 4. Fungsi Logout
   Future<void> signOut() async {
     await _supabase.auth.signOut();
   }
-
-  Future<Object?> signIn({required String email, required String password}) async {}
 }
 
 class AuthGate extends StatefulWidget {
