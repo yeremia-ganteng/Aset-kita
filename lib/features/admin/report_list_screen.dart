@@ -140,7 +140,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
                         Navigator.pop(context);
                       },
                     );
-                  }).toList(),
+                  }),
                   
                   const Divider(height: 24),
                   

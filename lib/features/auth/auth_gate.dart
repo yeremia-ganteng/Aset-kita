@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'login_screen.dart';
-import '../technician/technician_dashboard.dart';
 // import 'staff/staff_dashboard.dart'; // Sesuaikan dengan lokasi dashboard staff kamu
 
 class AuthGate extends StatefulWidget {
