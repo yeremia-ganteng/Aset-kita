@@ -54,6 +54,7 @@ dependencies:
      
      # Menampilkan gambar dari URL internet dengan sistem caching
   cached_network_image: ^3.4.1
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:

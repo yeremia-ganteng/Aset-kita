@@ -153,7 +153,7 @@ void _updateRealtimeDateTime() {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Anda harus memasukkan kembali kredensial akun untuk mengakses konsol admin.',
+                'Anda harus login kembali untuk mengakses konsol admin.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'Inter',
@@ -257,7 +257,7 @@ void _updateRealtimeDateTime() {
                                               color: Colors.white.withOpacity(0.18),
                                               borderRadius: BorderRadius.circular(10),
                                             ),
-                                            child: const Icon(Icons.hub_rounded, color: Colors.white, size: 24),
+                                            child: const Icon(Icons.lock_person_outlined, color: Colors.white, size: 24),
                                           ),
                                           const SizedBox(width: 12),
                                           Expanded(
@@ -293,7 +293,7 @@ void _updateRealtimeDateTime() {
                                     ),
                                     const SizedBox(width: 12),
                                     
-                                    // ✨ TOMBOL KELUAR PREMIUM (Gaya minimalis melengkung halus - Glass Action)
+                                    //  TOMBOL KELUAR PREMIUM (Gaya minimalis melengkung halus - Glass Action)
                                     Material(
                                       color: Colors.transparent,
                                       child: InkWell(

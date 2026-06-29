@@ -389,7 +389,7 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
             ),
           ),
 
-          // 🏷️ FILTER CHIPS ROW COMPONENT
+          //  FILTER CHIPS ROW COMPONENT
           Container(
             height: 50,
             decoration: BoxDecoration(
@@ -409,7 +409,7 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
             ),
           ),
 
-          // 📦 CONTAINER REALTIME STREAM DATA ASSETS
+          //  CONTAINER REALTIME STREAM DATA ASSETS
           Expanded(
             child: StreamBuilder<List<Map<String, dynamic>>>(
               stream: _supabase.from('assets').stream(primaryKey: ['id']).order('name'),
