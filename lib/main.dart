@@ -1,9 +1,7 @@
-import 'package:aset_kita/features/staff/qr_scanner_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/auth_services.dart';
-import 'package:aset_kita/features/staff/report_history_screen.dart';
 import 'package:aset_kita/features/admin/admin_dashboard.dart'; // Menghubungkan file dashboard admin terpisah
 import 'package:aset_kita/features/technician/technician_dashboard.dart'; // Dashboard teknisi
 import 'package:aset_kita/features/staff/staff_dashboard.dart';

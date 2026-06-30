@@ -51,6 +51,15 @@ dependencies:
      
      # Manajemen State aplikasi (Rekomendasi arsitektur modern)
   flutter_bloc: ^8.1.6
+
+    #fitur dinamis barcode
+  qr_flutter: ^4.1.0
+  uuid: ^4.3.3
+
+    # Fitur untuk capture widget dan simpan qr ke galeri
+  screenshot: ^3.0.0
+  gal: any
+  permission_handler: ^11.3.1
      
      # Menampilkan gambar dari URL internet dengan sistem caching
   cached_network_image: ^3.4.1

@@ -1,5 +1,11 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:qr_flutter/qr_flutter.dart'; // Tambahan integrasi qr_flutter
+import 'package:uuid/uuid.dart'; // Tambahan integrasi uuid
+import 'package:screenshot/screenshot.dart'; // Tambahan untuk capture widget QR
+import 'package:gal/gal.dart'; // Tambahan untuk simpan ke galeri
+import 'package:permission_handler/permission_handler.dart'; // Tambahan untuk kontrol izin storage
 
 class AssetManagementScreen extends StatefulWidget {
   const AssetManagementScreen({super.key});
@@ -15,17 +21,21 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
 
-  // ✨ STATE MANAJEMEN BARU: PENCARIAN & FILTER
+  // Tambahan Controller untuk Uuid dan Screenshot
+  final _uuid = const Uuid();
+  final ScreenshotController _screenshotController = ScreenshotController();
+
+  // STATE MANAJEMEN BARU: PENCARIAN & FILTER
   String _searchQuery = '';
   String _selectedFilter = 'semua'; // semua, baik, rusak, perlu perbaikan, sedang diservis
 
-  // 🎨 PALET WARNA TEMA: BIRU-PUTIH ELEGAN & PREMIUM
+  // PALET WARNA TEMA: BIRU-PUTIH ELEGAN & PREMIUM
   final Color primaryBlue = const Color(0xFF1E40AF); // Sapphire / Electric Blue
   final Color lightBlueBg = const Color(0xFFEFF6FF); // Background Biru Sangat Muda
   final Color softGreyBorder = const Color(0xFFE2E8F0); // Border modern
   final Color textDark = const Color(0xFF1E293B); // Slate gelap untuk teks utama
 
-  // 🧪 KUSTOMISASI WARNA BADGE STATUS DINAMIS
+  // KUSTOMISASI WARNA BADGE STATUS DINAMIS
   Color _getStatusBgColor(String status) {
     switch (status.toLowerCase()) {
       case 'baik':
@@ -56,14 +66,143 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
     }
   }
 
+  // FUNGSI BARU: Proses konversi widget QR ke gambar lalu disimpan ke galeri perangkat
+Future<void> _downloadQrCode(Uint8List imageBytes, String assetCode) async {
+    // 2. Cek dan minta izin akses galeri lewat package gal langsung (Lebih simple)
+    final hasAccess = await Gal.hasAccess();
+    if (!hasAccess) {
+      await Gal.requestAccess();
+    }
+
+    try {
+      // 3. Simpan byte gambar langsung ke galeri menggunakan gal.putImageBytes
+      await Gal.putImageBytes(imageBytes, name: "QR_$assetCode");
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('QR Code $assetCode berhasil disimpan ke Galeri!'), 
+          backgroundColor: Colors.green
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saat mengunduh: $e'), 
+          backgroundColor: Colors.red
+        ),
+      );
+    }
+  }
+
+  // MODAL BARU: Pop-up Detail QR Code saat Kartu/Nama Aset ditekan
+void _showQrDetailsDialog(Map<String, dynamic> asset) {
+    final code = asset['asset_code'] ?? 'KOSONG';
+    final name = asset['name'] ?? 'Aset Tanpa Nama';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Detail QR Code Aset', style: TextStyle(fontWeight: FontWeight.bold, color: textDark)),
+        // SOLUSI: Bungkus seluruh konten menggunakan SizedBox dengan lebar pasti
+        // agar AlertDialog tidak perlu menghitung intrinsic width secara spekulatif.
+        content: SizedBox(
+          width: 320, 
+          child: Screenshot(
+            controller: _screenshotController,
+            child: Container(
+              color: Colors.white, // Latar belakang putih eksplisit agar hasil capture tidak transparan
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    name, 
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16), 
+                    textAlign: TextAlign.center
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    code, 
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: softGreyBorder),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: QrImageView(
+                      data: code,
+                      version: QrVersions.auto,
+                      size: 180.0,
+                      gapless: false,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Lokasi: ${asset['location'] ?? '-'}', 
+                    style: const TextStyle(color: Colors.grey),
+                    textAlign: TextAlign.center
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tutup', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              try {
+                // Ambil capture gambar langsung dari keadaan widget yang sedang aktif di layar
+                final Uint8List? bytes = await _screenshotController.capture();
+                
+                if (bytes != null) {
+                  if (!context.mounted) return;
+                  Navigator.pop(context); // Tutup dialog setelah berhasil capture
+                  _downloadQrCode(bytes, code); // Kirim ke fungsi penyimpanan galeri
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Gagal mengambil gambar: $e'), backgroundColor: Colors.red),
+                );
+              }
+            },
+            icon: const Icon(Icons.download_rounded),
+            label: const Text('Download QR'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryBlue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
   Future<void> _addAsset() async {
-    final assetCode = _assetCodeController.text.trim();
     final assetName = _nameController.text.trim();
     final location = _locationController.text.trim();
 
-    if (assetCode.isEmpty || assetName.isEmpty || location.isEmpty) {
+    // Modifikasi: Jika Admin mengosongkan ID, generate otomatis kode UUID pendek 8 digit
+    String assetCode = _assetCodeController.text.trim();
+    if (assetCode.isEmpty) {
+      assetCode = "AST-${_uuid.v4().substring(0, 8).toUpperCase()}";
+    }
+
+    if (assetName.isEmpty || location.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Semua field wajib diisi!'), backgroundColor: Colors.orange),
+        const SnackBar(content: Text('Nama dan Lokasi wajib diisi!'), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -186,7 +325,7 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: selectedStatus,
+                    initialValue: selectedStatus,
                     dropdownColor: Colors.white,
                     decoration: InputDecoration(
                       labelText: 'Status Aset',
@@ -250,8 +389,8 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
               TextField(
                 controller: _assetCodeController,
                 decoration: InputDecoration(
-                  labelText: 'Kode / ID Aset',
-                  hintText: 'Contoh: AC-001, COMP-02',
+                  labelText: 'Kode / ID Aset (Opsional)',
+                  hintText: 'Kosongkan untuk auto UUID',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -467,7 +606,11 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
                       ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        // Avatar dengan Icon Premium Bertema Biru
+                        
+                        // MODIFIKASI 1: Menambahkan onTap di ListTile untuk membuka modal detail QR Code
+                        onTap: () => _showQrDetailsDialog(asset),
+
+                        // Modifikasi Icon box depan menjadi icon QR Code
                         leading: Container(
                           width: 48,
                           height: 48,
@@ -475,7 +618,7 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
                             color: lightBlueBg,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(Icons.inventory_2_rounded, color: primaryBlue, size: 24),
+                          child: Icon(Icons.qr_code_2_rounded, color: primaryBlue, size: 24),
                         ),
                         title: Text(
                           asset['name'] ?? 'Aset Tanpa Nama',
