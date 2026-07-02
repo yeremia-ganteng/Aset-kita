@@ -5,7 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart'; // Tambahan integrasi qr_flutter
 import 'package:uuid/uuid.dart'; // Tambahan integrasi uuid
 import 'package:screenshot/screenshot.dart'; // Tambahan untuk capture widget QR
 import 'package:gal/gal.dart'; // Tambahan untuk simpan ke galeri
-import 'package:permission_handler/permission_handler.dart'; // Tambahan untuk kontrol izin storage
+// Tambahan untuk kontrol izin storage
 
 class AssetManagementScreen extends StatefulWidget {
   const AssetManagementScreen({super.key});
